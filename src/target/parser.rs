@@ -67,12 +67,14 @@ impl TargetInfoParserInner {
         let arch = cargo_env("CARGO_CFG_TARGET_ARCH", ft.map(|t| t.arch))?;
         let vendor = cargo_env("CARGO_CFG_TARGET_VENDOR", ft.map(|t| t.vendor))?;
         let os = cargo_env("CARGO_CFG_TARGET_OS", ft.map(|t| t.os))?;
-        let env = cargo_env("CARGO_CFG_TARGET_ENV", ft.map(|t| t.env))?;
+        let mut env = cargo_env("CARGO_CFG_TARGET_ENV", ft.map(|t| t.env))?;
         // `target_abi` was stabilized in Rust 1.78, which is higher than our
         // MSRV, so it may not always be available; In that case, fall back to
         // `""`, which is _probably_ correct for unknown target names.
         let abi = cargo_env("CARGO_CFG_TARGET_ABI", ft.map(|t| t.abi))
             .unwrap_or_else(|_| String::default().into_boxed_str());
+
+        if os == "popcorn" { env = String::default().into_boxed_str(); }
 
         Ok(Self {
             full_arch: full_arch.to_string().into_boxed_str(),
@@ -221,8 +223,8 @@ fn parse_envabi(last_component: &str) -> Option<(&str, &str)> {
         "qnx800" => ("nto80", ""),
         "sgx" => ("sgx", ""),
         "threads" => ("threads", ""),
-        "native" => ("native", ""),
-        "posix" => ("posix", ""),
+        "native" => ("", ""),
+        "posix" => ("", ""),
 
         // ABIs
         "abi64" => ("", "abi64"),
